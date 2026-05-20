@@ -495,7 +495,7 @@
     .stats-grid {
       flex: 1;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 10px;
       min-width: 0;
     }
@@ -716,6 +716,10 @@
       <label>Hygiene</label>
       <input class="bulk-delta" data-stat="Hygiene" type="text" placeholder="±" maxlength="4">
     </div>
+    <div class="bulk-stat-col">
+      <label>Helse</label>
+      <input class="bulk-delta" data-stat="Helse" type="text" placeholder="±" maxlength="4">
+    </div>
   </div>
   <div class="bulk-sep"></div>
   <button class="bulk-apply" id="bulk-apply">Bruk ✓</button>
@@ -725,7 +729,7 @@
   'use strict';
 
   const STORAGE_KEY = 'julia-classroom-v1';
-  const STATS = ['Mat', 'Drikke', 'Energi', 'Hygiene'];
+  const STATS = ['Mat', 'Drikke', 'Energi', 'Hygiene', 'Helse'];
 
   let students = [];
   let nextId = 1;
