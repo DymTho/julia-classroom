@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klasserom</title>
+  <style>
+    :root {
+      --bg: #eef2f7;
+      --card: #ffffff;
+      --border: #dde3ec;
+      --text: #1e293b;
+      --muted: #64748b;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59,130,246,0.18);
+      --danger: #f87171;
+      --bar-empty: #d1d9e4;
+      --bar-gradient: linear-gradient(to right,
+        #7f0000 0%,
+        #b91c1c 14%,
+        #dc2626 24%,
+        #ea580c 34%,
+        #f97316 44%,
+        #f59e0b 54%,
+        #eab308 63%,
+        #84cc16 73%,
+        #22c55e 84%,
+        #16a34a 100%
+      );
+      --radius: 12px;
+      --shadow: 0 1px 6px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      padding: 28px 20px 100px;
+      color: var(--text);
+    }
+
+    /* ── Header ── */
+    .app-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .app-header h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.03em;
+    }
+
+    .app-header p {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-top: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 1px 10px;
+      border-radius: 20px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    /* ── Cards ── */
+    #students-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 1260px;
+      margin: 0 auto;
+    }
+
+    .student-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      transition: box-shadow 0.2s, border-color 0.2s;
+      animation: cardIn 0.22s ease-out both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .student-card:hover {
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1), 0 8px 24px rgba(0,0,0,0.07);
+      border-color: #c8d3e0;
+    }
+
+    /* ── Photo ── */
+    .photo-wrap {
+      position: relative;
+      width: 76px;
+      height: 76px;
+      flex-shrink: 0;
+      cursor: pointer;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .photo-wrap img {
+      width: 76px;
+      height: 76px;
+      object-fit: cover;
+      display: block;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+    }
+
+    .photo-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      opacity: 0;
+      transition: opacity 0.18s;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      user-select: none;
+    }
+
+    .photo-overlay .cam-icon { font-size: 1.25rem; }
+
+    .photo-wrap:hover .photo-overlay { opacity: 1; }
+
+    .photo-wrap input[type="file"] { display: none; }
+
+    /* ── Name ── */
+    .name-input {
+      width: 126px;
+      flex-shrink: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 6px 10px;
+      background: transparent;
+      text-align: center;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+
+    .name-input::placeholder { color: #b2bfd0; font-weight: 400; }
+
+    .name-input:hover {
+      background: #f4f7fb;
+      border-color: var(--border);
+    }
+
+    .name-input:focus {
+      background: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    /* ── Stats grid ── */
+    .stats-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .stat-col {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    /* ── Health bar ── */
+    .bar-track {
+      height: 22px;
+      border-radius: 11px;
+      background: var(--bar-empty);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar-gradient {
+      position: absolute;
+      inset: 0;
+      background: var(--bar-gradient);
+    }
+
+    .bar-mask {
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      background: var(--bar-empty);
+      border-radius: 0 11px 11px 0;
+      transition: width 0.22s ease;
+    }
+
+    /* ── Slider ── */
+    .stat-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .stat-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: grab;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    .stat-slider::-webkit-slider-thumb:active { cursor: grabbing; }
+
+    .stat-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
+      box-shadow: 0 2px 8px rgba(59,130,246,0.5);
+    }
+
+    .stat-slider::-moz-range-thumb {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: grab;
+    }
+
+    .stat-num {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-align: center;
+      font-weight: 600;
+    }
+
+    /* ── Delete button ── */
+    .del-btn {
+      position: absolute;
+      top: 7px; right: 7px;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: none;
+      background: var(--danger);
+      color: #fff;
+      font-size: 15px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s, background 0.15s, transform 0.1s;
+      padding-bottom: 1px;
+    }
+
+    .student-card:hover .del-btn { opacity: 1; }
+    .del-btn:hover { background: #dc2626; transform: scale(1.1); }
+
+    /* ── Empty state ── */
+    #empty-state {
+      text-align: center;
+      padding: 64px 20px 32px;
+      color: var(--muted);
+      display: none;
+    }
+
+    #empty-state .empty-icon { font-size: 3rem; margin-bottom: 14px; }
+    #empty-state p { font-size: 1rem; margin-bottom: 4px; }
+    #empty-state small { font-size: 0.82rem; }
+
+    /* ── Add button ── */
+    .add-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 22px;
+    }
+
+    #add-btn {
+      width: 58px; height: 58px;
+      border-radius: 50%;
+      border: 2.5px dashed #c0ccda;
+      background: transparent;
+      font-size: 2rem;
+      color: #94a3b8;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      line-height: 1;
+      padding-bottom: 2px;
+    }
+
+    #add-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-glow);
+      transform: scale(1.12) rotate(90deg);
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #c8d3e0; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Klasserom <span id="badge" class="badge" style="display:none">0</span></h1>
+  <p>Livsstatus for elevene</p>
+</header>
+
+<div id="students-list"></div>
+
+<div id="empty-state">
+  <div class="empty-icon">🏫</div>
+  <p>Ingen elever ennå</p>
+  <small>Trykk <strong>+</strong> nedenfor for å legge til en elev</small>
+</div>
+
+<div class="add-wrap">
+  <button id="add-btn" title="Legg til elev">+</button>
+</div>
+
+<script>
+  'use strict';
+
+  const STORAGE_KEY = 'julia-classroom-v1';
+  const STATS = ['Mat', 'Drikke', 'Energi', 'Hygiene'];
+
+  let students = [];
+  let nextId = 1;
+
+  /* ── Persistence ── */
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      students = Array.isArray(d.students) ? d.students : [];
+      nextId = d.nextId ?? (students.length ? Math.max(...students.map(s => s.id)) + 1 : 1);
+      students.forEach(renderCard);
+    } catch (e) {
+      console.error('Load failed:', e);
+    }
+    updateUI();
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ students, nextId }));
+    } catch (e) {
+      alert('⚠️ Lagringsplass er full.\nPrøv å fjerne noen elever eller erstatte bilder med mindre filer.');
+    }
+  }
+
+  /* ── State mutations ── */
+
+  function addStudent() {
+    const s = {
+      id: nextId++,
+      name: '',
+      photo: null,
+      stats: Object.fromEntries(STATS.map(k => [k, 100]))
+    };
+    students.push(s);
+    renderCard(s);
+    save();
+    updateUI();
+  }
+
+  function removeStudent(id) {
+    if (!confirm('Fjerne denne eleven?')) return;
+    students = students.filter(s => s.id !== id);
+    document.getElementById('sc-' + id)?.remove();
+    save();
+    updateUI();
+  }
+
+  function patch(id, key, val) {
+    const s = students.find(s => s.id === id);
+    if (!s) return;
+    if (key === 'name')       s.name = val;
+    else if (key === 'photo') s.photo = val;
+    else                      s.stats[key] = val;
+    save();
+  }
+
+  /* ── Image helpers ── */
+
+  function compressImage(file, cb) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 260;
+        let w = img.width, h = img.height;
+        if (Math.max(w, h) > MAX) {
+          if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
+          else        { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        cb(canvas.toDataURL('image/jpeg', 0.83));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function avatarSVG() {
+    return 'data:image/svg+xml,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="76" height="76" viewBox="0 0 76 76">' +
+      '<rect width="76" height="76" rx="10" fill="#e8edf4"/>' +
+      '<circle cx="38" cy="27" r="14" fill="#b2bfd0"/>' +
+      '<ellipse cx="38" cy="68" rx="22" ry="16" fill="#b2bfd0"/>' +
+      '</svg>'
+    );
+  }
+
+  /* ── Render ── */
+
+  function renderCard(s) {
+    const list = document.getElementById('students-list');
+
+    const card = document.createElement('div');
+    card.className = 'student-card';
+    card.id = 'sc-' + s.id;
+
+    /* delete */
+    const del = document.createElement('button');
+    del.className = 'del-btn';
+    del.title = 'Fjern elev';
+    del.innerHTML = '&times;';
+    del.addEventListener('click', () => removeStudent(s.id));
+    card.appendChild(del);
+
+    /* photo */
+    const photoWrap = document.createElement('div');
+    photoWrap.className = 'photo-wrap';
+
+    const img = document.createElement('img');
+    img.src = s.photo || avatarSVG();
+    img.alt = 'Elevbilde';
+
+    const ov = document.createElement('div');
+    ov.className = 'photo-overlay';
+    ov.innerHTML = '<span class="cam-icon">📷</span>Bytt bilde';
+
+    const fileIn = document.createElement('input');
+    fileIn.type = 'file';
+    fileIn.accept = 'image/*';
+    fileIn.addEventListener('change', e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      compressImage(f, b64 => {
+        img.src = b64;
+        patch(s.id, 'photo', b64);
+      });
+      fileIn.value = '';
+    });
+
+    photoWrap.addEventListener('click', () => fileIn.click());
+    photoWrap.appendChild(img);
+    photoWrap.appendChild(ov);
+    photoWrap.appendChild(fileIn);
+    card.appendChild(photoWrap);
+
+    /* name */
+    const nameIn = document.createElement('input');
+    nameIn.type = 'text';
+    nameIn.className = 'name-input';
+    nameIn.placeholder = 'Elevens navn';
+    nameIn.value = s.name || '';
+    nameIn.addEventListener('input', e => patch(s.id, 'name', e.target.value));
+    card.appendChild(nameIn);
+
+    /* stats */
+    const grid = document.createElement('div');
+    grid.className = 'stats-grid';
+
+    STATS.forEach(stat => {
+      const col = document.createElement('div');
+      col.className = 'stat-col';
+
+      const lbl = document.createElement('div');
+      lbl.className = 'stat-label';
+      lbl.textContent = stat;
+
+      const track = document.createElement('div');
+      track.className = 'bar-track';
+
+      const gradEl = document.createElement('div');
+      gradEl.className = 'bar-gradient';
+
+      const mask = document.createElement('div');
+      mask.className = 'bar-mask';
+      const v = s.stats[stat] ?? 100;
+      mask.style.width = (100 - v) + '%';
+
+      track.appendChild(gradEl);
+      track.appendChild(mask);
+
+      const slider = document.createElement('input');
+      slider.type = 'range';
+      slider.className = 'stat-slider';
+      slider.min = 0; slider.max = 100;
+      slider.value = v;
+
+      const numLbl = document.createElement('div');
+      numLbl.className = 'stat-num';
+      numLbl.textContent = v + '%';
+
+      slider.addEventListener('input', e => {
+        const n = +e.target.value;
+        mask.style.width = (100 - n) + '%';
+        numLbl.textContent = n + '%';
+        patch(s.id, stat, n);
+      });
+
+      col.appendChild(lbl);
+      col.appendChild(track);
+      col.appendChild(slider);
+      col.appendChild(numLbl);
+      grid.appendChild(col);
+    });
+
+    card.appendChild(grid);
+    list.appendChild(card);
+  }
+
+  /* ── UI refresh ── */
+
+  function updateUI() {
+    const badge = document.getElementById('badge');
+    const empty = document.getElementById('empty-state');
+    const n = students.length;
+    badge.textContent = n;
+    badge.style.display = n ? 'inline-block' : 'none';
+    empty.style.display = n ? 'none' : 'block';
+  }
+
+  /* ── Boot ── */
+
+  document.getElementById('add-btn').addEventListener('click', addStudent);
+  load();
+</script>
+
+</body>
+</html>
