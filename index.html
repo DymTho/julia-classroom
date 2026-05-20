@@ -770,10 +770,19 @@
 
   /* ── Theme & Music ── */
 
-  const audioDay   = new Audio('day.mp3');
+  const DAY_TRACKS = ['day1.mp3', 'day2.mp3', 'day3.mp3', 'day4.mp3', 'day5.mp3'];
+  let dayIndex = 0;
+
+  const audioDay   = new Audio(DAY_TRACKS[0]);
   const audioNight = new Audio('night.mp3');
-  audioDay.loop    = true;
   audioNight.loop  = true;
+
+  audioDay.addEventListener('ended', () => {
+    dayIndex = (dayIndex + 1) % DAY_TRACKS.length;
+    audioDay.src = DAY_TRACKS[dayIndex];
+    audioDay.play().catch(() => {});
+    updatePlayIcons();
+  });
 
   let currentMode = localStorage.getItem('julia-theme') || 'day';
 
@@ -786,13 +795,17 @@
   }
 
   function updatePlayIcons() {
-    document.getElementById('play-day').textContent   = (!audioDay.paused)   ? '⏸' : '▶';
-    document.getElementById('play-night').textContent = (!audioNight.paused) ? '⏸' : '▶';
+    const dp = document.getElementById('play-day');
+    const np = document.getElementById('play-night');
+    dp.textContent = (!audioDay.paused)
+      ? `⏸ ${dayIndex + 1}/${DAY_TRACKS.length}`
+      : `▶ ${dayIndex + 1}/${DAY_TRACKS.length}`;
+    np.textContent = (!audioNight.paused) ? '⏸' : '▶';
   }
 
   function handleTheme(mode) {
-    const audio      = mode === 'day' ? audioDay   : audioNight;
-    const other      = mode === 'day' ? audioNight : audioDay;
+    const audio = mode === 'day' ? audioDay   : audioNight;
+    const other = mode === 'day' ? audioNight : audioDay;
 
     if (currentMode === mode) {
       if (audio.paused) audio.play().catch(() => {});
@@ -809,6 +822,7 @@
   document.getElementById('btn-night').addEventListener('click', () => handleTheme('night'));
 
   applyTheme(currentMode);
+  updatePlayIcons();
 </script>
 
 <audio id="audio-day"   src="day.mp3"   loop preload="none"></audio>
