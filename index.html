@@ -140,6 +140,133 @@
     .t-label { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
     .t-play  { font-size: 0.75rem; opacity: 0.75; min-height: 1em; }
 
+    /* ── Checkboxes & selection ── */
+    .student-check {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: var(--accent);
+      z-index: 2;
+    }
+
+    .student-card { padding-left: 40px; }
+
+    .student-card.selected {
+      border-color: var(--accent);
+      background: rgba(59,130,246,0.04);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.18), var(--shadow);
+    }
+
+    /* ── Bulk edit bar ── */
+    .bulk-bar {
+      position: fixed;
+      bottom: -140px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card);
+      border: 2px solid var(--accent);
+      border-radius: 18px;
+      padding: 12px 18px;
+      box-shadow: 0 8px 32px rgba(59,130,246,0.22);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      z-index: 150;
+      transition: bottom 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      white-space: nowrap;
+    }
+
+    .bulk-bar.visible { bottom: 20px; }
+
+    .bulk-count {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--accent);
+      min-width: 80px;
+    }
+
+    .bulk-sep {
+      width: 1px;
+      height: 32px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .bulk-action {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .bulk-action:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); }
+
+    .bulk-stats {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    .bulk-stat-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .bulk-stat-col label {
+      font-size: 0.64rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .bulk-delta {
+      width: 62px;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      padding: 5px 4px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .bulk-delta::placeholder { color: #b2bfd0; font-style: italic; }
+    .bulk-delta:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+
+    .bulk-apply {
+      font-size: 0.88rem;
+      font-weight: 800;
+      padding: 9px 20px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(59,130,246,0.4);
+    }
+
+    .bulk-apply:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.5);
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -566,6 +693,34 @@
   <button id="add-btn" title="Legg til elev">+</button>
 </div>
 
+<div id="bulk-bar" class="bulk-bar">
+  <span id="bulk-count" class="bulk-count">0 valgt</span>
+  <div class="bulk-sep"></div>
+  <button class="bulk-action" id="bulk-select-all">Velg alle</button>
+  <button class="bulk-action" id="bulk-clear">Fjern valg</button>
+  <div class="bulk-sep"></div>
+  <div class="bulk-stats">
+    <div class="bulk-stat-col">
+      <label>Mat</label>
+      <input class="bulk-delta" data-stat="Mat" type="text" placeholder="±" maxlength="4">
+    </div>
+    <div class="bulk-stat-col">
+      <label>Drikke</label>
+      <input class="bulk-delta" data-stat="Drikke" type="text" placeholder="±" maxlength="4">
+    </div>
+    <div class="bulk-stat-col">
+      <label>Energi</label>
+      <input class="bulk-delta" data-stat="Energi" type="text" placeholder="±" maxlength="4">
+    </div>
+    <div class="bulk-stat-col">
+      <label>Hygiene</label>
+      <input class="bulk-delta" data-stat="Hygiene" type="text" placeholder="±" maxlength="4">
+    </div>
+  </div>
+  <div class="bulk-sep"></div>
+  <button class="bulk-apply" id="bulk-apply">Bruk ✓</button>
+</div>
+
 <script>
   'use strict';
 
@@ -618,10 +773,12 @@
 
   function removeStudent(id) {
     if (!confirm('Fjerne denne eleven?')) return;
+    selectedIds.delete(id);
     students = students.filter(s => s.id !== id);
     document.getElementById('sc-' + id)?.remove();
     save();
     updateUI();
+    updateBulkBar();
   }
 
   function patch(id, key, val) {
@@ -674,6 +831,13 @@
     const card = document.createElement('div');
     card.className = 'student-card';
     card.id = 'sc-' + s.id;
+
+    /* checkbox */
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.className = 'student-check';
+    cb.addEventListener('change', () => setSelected(s.id, cb.checked));
+    card.appendChild(cb);
 
     /* delete */
     const del = document.createElement('button');
@@ -743,6 +907,7 @@
 
       const mask = document.createElement('div');
       mask.className = 'bar-mask';
+      mask.dataset.statMask = stat;
       const v = s.stats[stat] ?? 100;
       mask.style.width = (100 - v) + '%';
 
@@ -754,9 +919,11 @@
       slider.className = 'stat-slider';
       slider.min = 0; slider.max = 100;
       slider.value = v;
+      slider.dataset.stat = stat;
 
       const numLbl = document.createElement('div');
       numLbl.className = 'stat-num';
+      numLbl.dataset.statNum = stat;
       numLbl.textContent = v + '%';
 
       slider.addEventListener('input', e => {
@@ -821,10 +988,70 @@
     empty.style.display = n ? 'none' : 'block';
   }
 
+  /* ── Selection & Bulk edit ── */
+
+  const selectedIds = new Set();
+
+  function setSelected(id, sel) {
+    const card = document.getElementById('sc-' + id);
+    if (!card) return;
+    const cb = card.querySelector('.student-check');
+    if (sel) {
+      selectedIds.add(id);
+      card.classList.add('selected');
+      if (cb) cb.checked = true;
+    } else {
+      selectedIds.delete(id);
+      card.classList.remove('selected');
+      if (cb) cb.checked = false;
+    }
+    updateBulkBar();
+  }
+
+  function updateBulkBar() {
+    const bar   = document.getElementById('bulk-bar');
+    const count = document.getElementById('bulk-count');
+    const n = selectedIds.size;
+    bar.classList.toggle('visible', n > 0);
+    count.textContent = n + ' valgt';
+  }
+
+  function applyBulk() {
+    const inputs = document.querySelectorAll('.bulk-delta');
+    let hasValue = false;
+    inputs.forEach(inp => { if (inp.value.trim() !== '') hasValue = true; });
+    if (!hasValue || selectedIds.size === 0) return;
+
+    selectedIds.forEach(id => {
+      const card = document.getElementById('sc-' + id);
+      if (!card) return;
+      inputs.forEach(inp => {
+        const stat  = inp.dataset.stat;
+        const delta = parseInt(inp.value, 10);
+        if (isNaN(delta)) return;
+        const slider = card.querySelector(`[data-stat="${stat}"]`);
+        const mask   = card.querySelector(`[data-stat-mask="${stat}"]`);
+        const numLbl = card.querySelector(`[data-stat-num="${stat}"]`);
+        if (!slider) return;
+        const next = Math.max(0, Math.min(100, parseInt(slider.value, 10) + delta));
+        slider.value = next;
+        mask.style.width = (100 - next) + '%';
+        numLbl.textContent = next + '%';
+        patch(id, stat, next);
+      });
+    });
+
+    inputs.forEach(inp => inp.value = '');
+  }
+
   /* ── Boot ── */
 
   document.getElementById('add-btn').addEventListener('click', addStudent);
   document.getElementById('dag-input').addEventListener('input', save);
+  document.getElementById('bulk-select-all').addEventListener('click', () => students.forEach(s => setSelected(s.id, true)));
+  document.getElementById('bulk-clear').addEventListener('click', () => [...selectedIds].forEach(id => setSelected(id, false)));
+  document.getElementById('bulk-apply').addEventListener('click', applyBulk);
+  document.querySelectorAll('.bulk-delta').forEach(inp => inp.addEventListener('keydown', e => { if (e.key === 'Enter') applyBulk(); }));
   load();
 
   /* ── Theme & Music ── */
