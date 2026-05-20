@@ -54,8 +54,60 @@
       top: 16px;
       right: 16px;
       display: flex;
+      flex-direction: column;
       gap: 8px;
       z-index: 200;
+      min-width: 160px;
+    }
+
+    .theme-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .volume-wrap {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 7px 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .vol-icon { font-size: 1rem; line-height: 1; flex-shrink: 0; }
+
+    .volume-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      transition: transform 0.1s;
+    }
+
+    .volume-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    .volume-slider::-moz-range-thumb {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
     }
 
     .theme-btn {
@@ -475,16 +527,23 @@
 <body>
 
 <div class="theme-controls">
-  <button class="theme-btn" id="btn-day">
-    <span class="t-icon">☀️</span>
-    <span class="t-label">Dag</span>
-    <span class="t-play" id="play-day">▶</span>
-  </button>
-  <button class="theme-btn" id="btn-night">
-    <span class="t-icon">🌙</span>
-    <span class="t-label">Natt</span>
-    <span class="t-play" id="play-night">▶</span>
-  </button>
+  <div class="theme-btns">
+    <button class="theme-btn" id="btn-day">
+      <span class="t-icon">☀️</span>
+      <span class="t-label">Dag</span>
+      <span class="t-play" id="play-day">▶</span>
+    </button>
+    <button class="theme-btn" id="btn-night">
+      <span class="t-icon">🌙</span>
+      <span class="t-label">Natt</span>
+      <span class="t-play" id="play-night">▶</span>
+    </button>
+  </div>
+  <div class="volume-wrap">
+    <span class="vol-icon">🔇</span>
+    <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="70">
+    <span class="vol-icon">🔊</span>
+  </div>
 </div>
 
 <header class="app-header">
@@ -820,6 +879,19 @@
 
   document.getElementById('btn-day').addEventListener('click',   () => handleTheme('day'));
   document.getElementById('btn-night').addEventListener('click', () => handleTheme('night'));
+
+  const volSlider = document.getElementById('volume-slider');
+  const savedVol  = localStorage.getItem('julia-volume');
+  if (savedVol !== null) volSlider.value = savedVol;
+  audioDay.volume   = volSlider.value / 100;
+  audioNight.volume = volSlider.value / 100;
+
+  volSlider.addEventListener('input', () => {
+    const v = volSlider.value / 100;
+    audioDay.volume   = v;
+    audioNight.volume = v;
+    localStorage.setItem('julia-volume', volSlider.value);
+  });
 
   applyTheme(currentMode);
   updatePlayIcons();
