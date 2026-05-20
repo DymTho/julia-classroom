@@ -48,7 +48,7 @@
     }
 
     .app-header h1 {
-      font-size: 1.75rem;
+      font-size: 2.6rem;
       font-weight: 800;
       color: var(--text);
       letter-spacing: -0.03em;
@@ -64,12 +64,90 @@
       display: inline-block;
       background: var(--accent);
       color: #fff;
-      font-size: 0.75rem;
+      font-size: 1rem;
       font-weight: 700;
-      padding: 1px 10px;
+      padding: 2px 14px;
       border-radius: 20px;
-      margin-left: 8px;
+      margin-left: 10px;
       vertical-align: middle;
+    }
+
+    /* ── Dag field ── */
+    .dag-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .dag-label {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .dag-input {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 4px 14px;
+      background: transparent;
+      text-align: center;
+      outline: none;
+      min-width: 140px;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    }
+
+    .dag-input::placeholder { color: #b2bfd0; font-weight: 400; }
+    .dag-input:hover { background: #f4f7fb; border-color: var(--border); }
+    .dag-input:focus {
+      background: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    /* ── Delta input ── */
+    .delta-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      margin-top: 3px;
+    }
+
+    .delta-input {
+      width: 70px;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      background: #f1f5f9;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 6px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+
+    .delta-input::placeholder { color: #b2bfd0; font-style: italic; }
+
+    .delta-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+      background: #fff;
+    }
+
+    .delta-input.flash-ok {
+      border-color: #22c55e;
+      background: #f0fdf4;
+    }
+
+    .delta-input.flash-err {
+      border-color: var(--danger);
+      background: #fff5f5;
     }
 
     /* ── Cards ── */
@@ -342,7 +420,10 @@
 
 <header class="app-header">
   <h1>Klasserom <span id="badge" class="badge" style="display:none">0</span></h1>
-  <p>Livsstatus for elevene</p>
+  <div class="dag-wrap">
+    <span class="dag-label">Dag:</span>
+    <input id="dag-input" class="dag-input" type="text" placeholder="Skriv dag..." maxlength="40" autocomplete="off">
+  </div>
 </header>
 
 <div id="students-list"></div>
@@ -375,6 +456,7 @@
       const d = JSON.parse(raw);
       students = Array.isArray(d.students) ? d.students : [];
       nextId = d.nextId ?? (students.length ? Math.max(...students.map(s => s.id)) + 1 : 1);
+      if (d.dag) document.getElementById('dag-input').value = d.dag;
       students.forEach(renderCard);
     } catch (e) {
       console.error('Load failed:', e);
@@ -384,7 +466,8 @@
 
   function save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ students, nextId }));
+      const dag = document.getElementById('dag-input')?.value ?? '';
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ students, nextId, dag }));
     } catch (e) {
       console.error('Save failed:', e);
     }
@@ -555,10 +638,43 @@
         patch(s.id, stat, n);
       });
 
+      const deltaRow = document.createElement('div');
+      deltaRow.className = 'delta-row';
+
+      const deltaIn = document.createElement('input');
+      deltaIn.type = 'text';
+      deltaIn.className = 'delta-input';
+      deltaIn.placeholder = '± ';
+      deltaIn.maxLength = 5;
+      deltaIn.title = 'Skriv f.eks. -25 og trykk Enter';
+
+      deltaIn.addEventListener('keydown', e => {
+        if (e.key !== 'Enter') return;
+        const delta = parseInt(deltaIn.value, 10);
+        if (isNaN(delta)) {
+          deltaIn.classList.add('flash-err');
+          setTimeout(() => deltaIn.classList.remove('flash-err'), 600);
+          deltaIn.value = '';
+          return;
+        }
+        const cur = parseInt(slider.value, 10);
+        const next = Math.max(0, Math.min(100, cur + delta));
+        slider.value = next;
+        mask.style.width = (100 - next) + '%';
+        numLbl.textContent = next + '%';
+        patch(s.id, stat, next);
+        deltaIn.classList.add('flash-ok');
+        setTimeout(() => deltaIn.classList.remove('flash-ok'), 500);
+        deltaIn.value = '';
+      });
+
+      deltaRow.appendChild(deltaIn);
+
       col.appendChild(lbl);
       col.appendChild(track);
       col.appendChild(slider);
       col.appendChild(numLbl);
+      col.appendChild(deltaRow);
       grid.appendChild(col);
     });
 
@@ -580,6 +696,7 @@
   /* ── Boot ── */
 
   document.getElementById('add-btn').addEventListener('click', addStudent);
+  document.getElementById('dag-input').addEventListener('input', save);
   load();
 </script>
 
